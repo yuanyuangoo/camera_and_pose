@@ -7,6 +7,5 @@ import os
 def getPose(input_img, pose2d):
     pose2d_list = pose2d.tolist()
     eng = matlab.start_matlab()
-    print 'aaaaaaaaaaaaa'
     X,R,t=eng.triarea(input_img, pose2d_list,nargout=3)
     return X,R,t
