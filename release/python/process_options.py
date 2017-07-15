@@ -83,12 +83,12 @@ except ImportError:
 #% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 1096307
 #% USA.
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-def process_options(args, varargin):
+def process_options(args, varargin,nargout=1):
 
     # Local Variables: unused, nunused, i, args, varargout, n, warn, varargin, found, j, nout
     # Function calls: process_options, nargout, cell, length, warning, sprintf, error, strcmpi, mod
     #% Check the number of input arguments
-    n = length(varargin)
+    n = len(varargin)
     if np.mod(n, 2.):
         matcompat.error('Each option must be a string/value pair.')
     
@@ -131,10 +131,6 @@ def process_options(args, varargin):
                 unused.cell[int((2.*nunused-1.))-1] = args.cell[int(i)-1]
                 unused.cell[int((2.*nunused))-1] = args.cell[int((i+1.))-1]
                 
-            
-        
-        
-        
     #% Assign the unused arguments
     if not warn:
         if nunused:
@@ -142,7 +138,4 @@ def process_options(args, varargin):
         else:
             varargout.cell[int(nout)-1] = cell(0.)
             
-        
-    
-    
     return [varargout]

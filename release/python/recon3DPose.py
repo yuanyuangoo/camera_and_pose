@@ -1,8 +1,7 @@
-
 import numpy as np
 import scipy
 import matcompat
-
+import posec
 # if available import pylab (from matlibplot)
 try:
     import matplotlib.pylab as plt
@@ -42,35 +41,9 @@ def recon3DPose(im, xy, varargin):
     # Function calls: load, figure, visualizeGaussianModel, drawCam, clf, pose, setK, length, ones, isempty, alignToCamera, cameraAndPose, recon3DPose, size
     #% [X, R, t] = recon3DPose(xy,im,varargin)
     #% Parse parameters.
-    'skel'
-    \'
-    'BOMP'
-    \'
-    'mu'
-    \'
-    'lambda2'
-    0.01
-    'lambda1'
-    0.01
-    'K'
-    setK(matcompat.size(im, 2.), matcompat.size(im, 1.), 2.)
-    'numIter'
-    20.
-    'numIters2'
-    30.
-    'tol1'
-    500.
-    'tol2'
-    1.
-    'ks'
-    15.
-    'optType'
-    1.
-    'viz'
-    0.
-    'annoids'
-    np.arange(1., 16.0)
-    'numPoints'
+    pose=posec()
+    [pose.skel, pose.BOMP, pose.mu, pose.lambda1,pose.lamda2, pose.K, pose.numIter,pose.numIters2, pose.tol1, pose.tol2, pose.ks,pose.optType, pose.viz, pose.annoids,pose.numPoints]=pose.process_options('viz',1,'skel','','BOMP','','mu','','lambda2',0.01,'lambda1',0.01,'K',setK(matcompapose.size(im, 2.), matcompapose.size(im, 1.), 2.),'numIter',20.,'numIters2',30.,'tol1',500.,'tol2',1.,'ks',15.,'optType',1.,'viz',0.,'annoids',np.arange(1., 16.0),'numPoints')
+
     pose.im = im
     pose.xy = np.array(np.vstack((np.hstack((xy)), np.hstack((np.ones(1., matcompat.size(xy, 2.)))))))
     #% Load default basis and skeleton
