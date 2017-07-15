@@ -35,8 +35,10 @@ if(viz)
         axis equal
         hold off
         
-        if(K(1,3)>0) &&(K(2,3)>0)
-            axis([0 2*K(1,3) 0 2*K(2,3)]);
+        if(K(1,3)>0)
+            if(K(2,3)>0)
+                axis([0 2*K(1,3) 0 2*K(2,3)]);
+            end
         end
         axis ij% make sure the left is on the left.
         set(handle(1), 'markersize', 20);

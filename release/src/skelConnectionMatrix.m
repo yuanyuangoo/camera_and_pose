@@ -20,7 +20,6 @@ function connection = skelConnectionMatrix(skel);
 %	Copyright (c) 2006 Neil D. Lawrence
 % 	skelConnectionMatrix.m CVS version 1.2
 % 	skelConnectionMatrix.m SVN version 42
-% 	last update 2008-08-12T20:23:47.000000Z
 
 connection = zeros(length(skel.tree));
 for i = 1:length(skel.tree);

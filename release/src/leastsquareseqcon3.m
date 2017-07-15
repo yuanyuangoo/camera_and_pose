@@ -26,7 +26,7 @@ f = f-alpha^2;
 [num,den] = numden(f);
 c = coeffs(num);
 numNorm =    vpa(num/c(end));
-% lambdaSol = roots(coeff);
+lambdaSol = roots(coeff);
 
 if(diff(f)~=0)
 
@@ -37,13 +37,13 @@ if(diff(f)~=0)
     ind = find(realLambdaSol == max(realLambdaSol)); 
     ind =ind(1);
 
-    xsol = (A'*A+realLambdaSol(ind)*(C'*C))\(A'*b+realLambdaSol(ind)*C'*d);
+    % xsol = (A'*A+realLambdaSol(ind)*(C'*C))\(A'*b+realLambdaSol(ind)*C'*d);
     xsol = xsol';
     x = xsol;
     if(sum(isnan(xsol)))
         xsol(isnan(xsol))=0;
     end
-%     disp(xsol');
+    % disp(xsol');
 else
     
 end

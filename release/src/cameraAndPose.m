@@ -48,22 +48,22 @@ res = xyt - Mmu;
 selectIdx = [];
 pose.numIters = 0;
 pose.repErr = inf;
-while (pose.repErr> pose.tol1 && length(selectIdx) < pose.ks)
+% while (pose.repErr> pose.tol1 && length(selectIdx) < pose.ks)
     
-    %Pick best basis vector
-    A = Msub*pose.BreVis;
-    A(:,selectIdx) = NaN;
-    lambdas = res'*A;
-    [~,imax] = max(abs(lambdas));
+%     %Pick best basis vector
+%     A = Msub*pose.BreVis;
+%     A(:,selectIdx) = NaN;
+%     lambdas = res'*A;
+%     [~,imax] = max(abs(lambdas));
     
-    % Add basis to collection
-    selectIdx = [selectIdx imax];
-    pose.selectIdx = selectIdx;
+%     % Add basis to collection
+%     selectIdx = [selectIdx imax];
+%     pose.selectIdx = selectIdx;
     
-    % Minimize reconstruction error and compute residual
-    [camera, pose, res] = minimizeReconError(pose, camera);
-    Msub = kron(eye(length(pose.annoids),length(pose.annoids)),camera.M);
-end
+%     % Minimize reconstruction error and compute residual
+%     [camera, pose, res] = minimizeReconError(pose, camera);
+%     Msub = kron(eye(length(pose.annoids),length(pose.annoids)),camera.M);
+% end
 
 end
 
@@ -72,7 +72,7 @@ end
 function pose = scaleInput(pose)
 % Helper function to scale input so that K = eye(3)
 pose.xyunscaled = pose.xy;
-pose.xyh        = pose.K\pose.xy;
+pose.xyh        = pose.xy/pose.K;
 pose.xyvisible  = pose.xyh(1:2,pose.annoids);
 end
 
