@@ -1,7 +1,10 @@
-
 import numpy as np
 import scipy
 import matcompat
+import sympy as sy
+from sympy import var
+import shgsvd as sgh
+#from mlabwrap import mlab
 
 # if available import pylab (from matlibplot)
 try:
@@ -14,49 +17,76 @@ def leastsquareseqcon3(A, b, C, d, alpha):
     # Local Variables: numNorm, xsol, num, alpha, ind, realLambdaSol, Dc, Da, lambdaSol, A, C, U, V, X, a, c, b, e, d, f, i, p, r, den, x, lambda
     # Function calls: max, numden, leastsquareseqcon3, isnan, diag, sum, gsvd, solve, sym, find, length, abs, vpa, double, coeffs, diff, imag, coeff, roots, size
     #% Solve generalized SVD to get gammas and alphas. Please refer Gander et al, for description of the algorithm.
-    [U, V, X, Da, Dc] = gsvd(A, C)
+    result=sgh.gsvd(A, C)
+    #U,V,X,Da,Dc = mlab.gsvd(A,C,nout=5)
+    V=result[5]
+    U=result[4]
+    Da=result[2]
+    
+    Dc=result[3]
+    X=abs(result[0])
     c = np.dot(U.conj().T, b)
     e = np.dot(V.conj().T, d)
     p = matcompat.size(C, 1.)
     r = np.sum((np.diag(Dc) > 0.))
-    lambda = sym('lambda', 'real')
-    i = 1.
+    lambda1 = var('lambda')
+    i = 0
     #% tic;
-    f = matdiv(np.dot(Da[int(i)-1,int(i)-1]**2., (np.dot(Dc[int(i)-1,int(i)-1], c[int(i)-1])-np.dot(Da[int(i)-1,int(i)-1], e[int(i)-1]))**2.), (Da[int(i)-1,int(i)-1]**2.+np.dot(lambda, Dc[int(i)-1,int(i)-1]**2.))**2.)
-    for i in np.arange(2., (r)+1):
-        a = matdiv(np.dot(Da[int(i)-1,int(i)-1]**2., (np.dot(Dc[int(i)-1,int(i)-1], c[int(i)-1])-np.dot(Da[int(i)-1,int(i)-1], e[int(i)-1]))**2.), (Da[int(i)-1,int(i)-1]**2.+np.dot(lambda, Dc[int(i)-1,int(i)-1]**2.))**2.)
+    
+    #f=(Da[i,i]**2)*((Dc[i,i]*c[i]-Da[i,i]*e[i])**2) / ((Da[i,i]**2+lambda1*(Dc[i,i]**2))**2)
+    f=(Da[i]**2)*((Dc[i]*c[i]-Da[i]*e[i])**2) / ((Da[i]**2+lambda1*(Dc[i]**2))**2)
+
+
+    for i in np.arange(1, r):
+        a = (Da[i]**2)*((Dc[i]*c[i]-Da[i]*e[i])**2) / ((Da[i]**2+lambda1*(Dc[i]**2))**2)
         f = f+a
-        
+
     #% toc;
-    if length(e) > r:
-        for i in np.arange(r+1., (p)+1):
-            f = f+e[int(i)-1]**2.
+    if len(e) > r:
+        for i in np.arange(r, p):
+            f = f+(e[i]**2)
             
     
     
-    f = f-alpha**2.
-    [num, den] = numden(f)
-    c = coeffs(num)
-    numNorm = vpa(matdiv(num, c[int(0)-1]))
-    lambdaSol = np.roots(coeff)
-    if np.diff(f) != 0.:
-        lambdaSol = plt.solve(numNorm)
-        lambdaSol = np.double(lambdaSol)
-        realLambdaSol = lambdaSol[int((not np.abs(np.imag(lambdaSol)) > 0.))-1]
-        ind = nonzero((realLambdaSol == matcompat.max(realLambdaSol)))
-        ind = ind[0]
-        #% xsol = (A'*A+realLambdaSol(ind)*(C'*C))\(A'*b+realLambdaSol(ind)*C'*d);
-        xsol = xsol.conj().T
+    f = f-alpha**2
+    from sympy.simplify import combsimp,numer
+
+    num = numer(combsimp(f[0]))
+    # coe = num.as_coefficients_dict()
+    # coef=np.ones((len(num.as_coefficients_dict())))
+    # tmp=0
+    # for (k,v) in  coe.items():
+    #     coef[tmp]=v
+    #     tmp=tmp+1
+    # print('n')
+    # numNorm = num/c[1]
+    #lambdaSol = np.roots(coeff)
+    if sy.diff(f) != 0.:
+        from sympy import I
+        lambdaSol = sy.solve(num)
+        realLambdaSol=get_real(lambdaSol)
+        #realLambdaSol = lambdaSol[np.logical_not(np.abs(lambdaSol.imag) > 0)]
+        ind=realLambdaSol.argmax(0)
+        
+        up=np.dot(A.conj().T,A) + realLambdaSol[ind]*(np.dot(C.conj().T,C))
+        down=np.dot(A.conj().T,b) + realLambdaSol[ind]*np.dot(C.conj().T,d).squeeze()
+
+        #up=up.reshape((up.shape[0],up.shape[0]))
+        #down=down.reshape((down.shape[0],1))
+
+        # xsol=np.linalg.solve(up,down)
+        if  (up.shape[0]==1):
+            xsol=np.array([down[0]/up[0]])
+        else:
+            xsol,resid,rank,s=np.linalg.lstsq(up,down)
+
+        xsol=xsol.conj().T
         x = xsol
-        if np.sum(np.isnan(xsol)):
-            xsol[int(np.isnan[int(xsol)-1])-1] = 0.
-        
-        
+        # if np.sum(np.isnan(xsol)):
+        # xsol[np.isnan(xsol)] = 0.
+
         #% disp(xsol');
-    else:
-        
-        
-    
+
     #%% Solve completely symbolically.
     #% syms x lambda;
     #% x = inv(A'*A + lambda*C'*C)*(A'*b + lambda*C'*d);
@@ -69,4 +99,18 @@ def leastsquareseqcon3(A, b, C, d, alpha):
     #% realLambdaSol = lambdaSol(~(abs(imag(lambdaSol))>0));
     #% ind = find(realLambdaSol == max(realLambdaSol));
     #% xsol = x(ind,:);
-    return [x, xsol]
+    return x, xsol
+#!/usr/bin/env python
+
+import numpy as np
+import scipy.linalg
+def get_real(arr):
+    for i in np.arange(0,len(arr)):
+        if len(arr[i]._args):
+            if abs(arr[i]._args[1].args[0])>0.0000001:
+                arr[i]=0
+            else:
+                arr[i]=arr[i]._args[0]
+    tmp=np.array(arr)
+    tmp=tmp[np.nonzero(tmp)]
+    return tmp

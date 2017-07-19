@@ -23,7 +23,7 @@ function connection = skelConnectionMatrix(skel);
 
 connection = zeros(length(skel.tree));
 for i = 1:length(skel.tree);
-  for j = 1:length(skel.tree(i).children)    
+  for j = 1:length(skel.tree(i).children)
     connection(i, skel.tree(i).children(j)) = 1;
   end
 end

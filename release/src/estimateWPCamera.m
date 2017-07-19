@@ -50,7 +50,7 @@ if(sum(abs(diag(U)))>1)
     S = S(1:2,1:2);
 else
     S = S(1:2,1:2);
-    S = flipud(fliplr(S));
+    S=rot90(S,2);
 %     disp('Flip scales');
 end
 % S = U*S;

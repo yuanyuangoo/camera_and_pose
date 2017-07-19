@@ -81,8 +81,6 @@ except ImportError:
 #% You should have received a copy of the GNU General Public License
 #% along with this program; if not, write to the Free Software
 #% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 1096307
-#% USA.
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 def process_options(args, varargin,nargout=1):
 
     # Local Variables: unused, nunused, i, args, varargout, n, warn, varargin, found, j, nout

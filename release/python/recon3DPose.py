@@ -1,75 +1,97 @@
+import sys 
+sys.path.append('../../../hogsvd-python')
+
 import numpy as np
 import scipy
+import scipy.io as spio
+
 import matcompat
-import posec
-# if available import pylab (from matlibplot)
-try:
-    import matplotlib.pylab as plt
-except ImportError:
-    pass
+import poseclass as po
+import cameraclass as cc
 
-#% [X, R, t] = function recon3DPose(xy,im,varargin)
-#%
-#% Inputs:   xy - [2 x 14] matrix of 2D joint locations
-#%           im - Input image
-#%           
-#%
-#%
-#% Outputs:  X  - [3 x 14] matrix of 3D joint locations.
-#%           R  - [3 x 3]  Relative Camera Rotation.
-#%           t  - [3 x 1]  Relative Camera translation.
-#%
-#% Wrapper for reconstruction of the 3D Pose of a human figure given the 
-#% locations of the 2D anatomical landmarks.
-#% Copyright (C) 2012  Varun Ramakrishna.
-#% 
-#% This program is free software: you can redistribute it and/or modify
-#% it under the terms of the GNU General Public License as published by
-#% the Free Software Foundation, either version 3 of the License, or
-#% (at your option) any later version.
-#% 
-#% This program is distributed in the hope that it will be useful,
-#% but WITHOUT ANY WARRANTY; without even the implied warranty of
-#% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#% GNU General Public License for more details.
-#% 
-#% You should have received a copy of the GNU General Public License
-#% along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import setK as sk
+import cameraAndPose as cp
+
 def recon3DPose(im, xy, varargin):
-
-    # Local Variables: Xnew1, annoids, basis, camera, pose, numPoints, mu, skel, xy, im, t, BOMP, varargin, X, R
-    # Function calls: load, figure, visualizeGaussianModel, drawCam, clf, pose, setK, length, ones, isempty, alignToCamera, cameraAndPose, recon3DPose, size
-    #% [X, R, t] = recon3DPose(xy,im,varargin)
-    #% Parse parameters.
-    pose=posec()
-    [pose.skel, pose.BOMP, pose.mu, pose.lambda1,pose.lamda2, pose.K, pose.numIter,pose.numIters2, pose.tol1, pose.tol2, pose.ks,pose.optType, pose.viz, pose.annoids,pose.numPoints]=pose.process_options('viz',1,'skel','','BOMP','','mu','','lambda2',0.01,'lambda1',0.01,'K',setK(matcompapose.size(im, 2.), matcompapose.size(im, 1.), 2.),'numIter',20.,'numIters2',30.,'tol1',500.,'tol2',1.,'ks',15.,'optType',1.,'viz',0.,'annoids',np.arange(1., 16.0),'numPoints')
-
+    pose=po.pose()
+    camera=cc.camera()
     pose.im = im
-    pose.xy = np.array(np.vstack((np.hstack((xy)), np.hstack((np.ones(1., matcompat.size(xy, 2.)))))))
+
+    #process_options(self,skel,BOMP,mu,lambda2,lambda1,K,numIter,numIters2,tol1,tol2,ks,optType,viz,annoids,numPoints):
+    pose.process_options('','','',0.01,0.01,sk.setK(im.shape[1], im.shape[0], 2.),20,30,500,1,15,1,0,np.arange(0,15),15)
+
     #% Load default basis and skeleton
-    if isempty((pose.BOMP)) or isempty((pose.mu)) or isempty((pose.skel)):
-        basis = np.load('mocapReducedModel.mat')
-        pose.BOMP = basis.B
-        pose.mu = basis.mu
-        pose.skel = basis.skel
-        pose.numPoints = length((pose.skel.tree))
-        pose.annoids = np.array(np.hstack((np.arange(1., (length((pose.skel.tree)))+1))))
+    if not pose.BOMP or not pose.mu or not pose.skel:
+        basis = loadmat('./camera_and_pose/release/models/mocapReducedModel.mat')
+        #basis = loadmat('../models/mocapReducedModel.mat')
+
+        pose.BOMP = basis['B']
+        pose.mu = basis['mu']
+        pose.skel = basis['skel']
+
+        pose.numPoints = len(pose.skel['tree'])
+        pose.annoids = np.hstack((np.arange(0,pose.numPoints)))
+            
+    for i in range(len(xy)):
+        #xy_=xy[i]
+        #xy_=np.transpose(convert(xy_))
+        xy_=xy
+        
+        pose.xy=np.vstack((xy_,np.ones((1,15))))
+        #pose.xy=np.concatenate((xy_,np.zeros((1,15))),axis=0)
+
+        #% Reconstruct camera and pose.
+        cp.cameraAndPose(pose,camera)
+        #% Assign outputs
+        X = pose.XnewR
+        R = camera.R
+        t = camera.t
+        #% Show aligned output
+        # if pose.viz:
+        #     np.load(frontCam)
+        #     Xnew1 = alignToCamera((pose.XnewR), (camera.R), (camera.t), R, t)
+        #     plt.figure(9.)
+        #     plt.clf
+        #     visualizeGaussianModel(Xnew1, (pose.skel))
+        #     drawCam(R, t)
     
-    
-    #% Reconstruct camera and pose.
-    [camera, pose] = cameraAndPose(pose)
-    #% Assign outputs
-    X = pose.XnewR
-    R = camera.R
-    t = camera.t
-    #% Show aligned output
-    if pose.viz:
-        np.load(frontCam)
-        Xnew1 = alignToCamera((pose.XnewR), (camera.R), (camera.t), R, t)
-        plt.figure(9.)
-        plt.clf
-        visualizeGaussianModel(Xnew1, (pose.skel))
-        drawCam(R, t)
-    
-    
-    return [X, R, t]
+    return X, R, t
+
+def convert(xy=None):
+    #index = (6, 7, 5, 2, 3, 4, 1, 8, 9, 9, 15, 14, 13, 10, 11, 12)
+    index = (6, 3, 4, 5, 2,0,1,7,9,13,14,15,12,11,10)
+    return xy[np.array(index)]
+
+
+def loadmat(filename):
+    '''
+    this function should be called instead of direct spio.loadmat
+    as it cures the problem of not properly recovering python dictionaries
+    from mat files. It calls the function check keys to cure all entries
+    which are still mat-objects
+    '''
+    data = spio.loadmat(filename, struct_as_record=False, squeeze_me=True)
+    return _check_keys(data)
+
+def _check_keys(dict):
+    '''
+    checks if entries in dictionary are mat-objects. If yes
+    todict is called to change them to nested dictionaries
+    '''
+    for key in dict:
+        if isinstance(dict[key], spio.matlab.mio5_params.mat_struct):
+            dict[key] = _todict(dict[key])
+    return dict        
+
+def _todict(matobj):
+    '''
+    A recursive function which constructs from matobjects nested dictionaries
+    '''
+    dict = {}
+    for strg in matobj._fieldnames:
+        elem = matobj.__dict__[strg]
+        if isinstance(elem, spio.matlab.mio5_params.mat_struct):
+            dict[strg] = _todict(elem)
+        else:
+            dict[strg] = elem
+    return dict

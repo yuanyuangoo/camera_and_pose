@@ -20,13 +20,15 @@ end
 if(length(e)>r)
     for i =r+1:p
         f = f+e(i)^2;
+        
     end
 end
 f = f-alpha^2;
 [num,den] = numden(f);
 c = coeffs(num);
+
 numNorm =    vpa(num/c(end));
-lambdaSol = roots(coeff);
+%lambdaSol = roots(coeff);
 
 if(diff(f)~=0)
 
@@ -36,8 +38,10 @@ if(diff(f)~=0)
     realLambdaSol = lambdaSol(~(abs(imag(lambdaSol))>0));
     ind = find(realLambdaSol == max(realLambdaSol)); 
     ind =ind(1);
+    up=(A'*A+realLambdaSol(ind)*(C'*C));
+    down=(A'*b+realLambdaSol(ind)*C'*d);
 
-    % xsol = (A'*A+realLambdaSol(ind)*(C'*C))\(A'*b+realLambdaSol(ind)*C'*d);
+    xsol = up\down;
     xsol = xsol';
     x = xsol;
     if(sum(isnan(xsol)))

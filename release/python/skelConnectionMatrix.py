@@ -1,13 +1,4 @@
-
 import numpy as np
-import scipy
-import matcompat
-
-# if available import pylab (from matlibplot)
-try:
-    import matplotlib.pylab as plt
-except ImportError:
-    pass
 
 def skelConnectionMatrix(skel):
 
@@ -31,10 +22,14 @@ def skelConnectionMatrix(skel):
     #%	Copyright (c) 2006 Neil D. Lawrence
     #% 	skelConnectionMatrix.m CVS version 1.2
     #% 	skelConnectionMatrix.m SVN version 42
-    connection = np.zeros(length((skel.tree)))
-    for i in np.arange(1., (length((skel.tree)))+1):
-        for j in np.arange(1., (length((skel.tree[int(i)-1].children)))+1):
-            connection[int(i)-1,int((skel.tree[int(i)-1].children[int(j)-1]))-1] = 1.
-            
-        
-    return [connection]
+    t=skel['tree']
+    connection = np.zeros((len(t),len(t)))
+    for i in np.arange(0, len(t)):
+        if isinstance(t[i].children,int):
+            tmp=1
+            connection[i,(t[i].children)-1] = 1
+        else:
+            tmp=len(t[i].children)
+            for j in np.arange(0, tmp):
+                connection[i,(t[i].children)[j]-1] = 1
+    return connection

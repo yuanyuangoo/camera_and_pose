@@ -9,22 +9,24 @@ try:
 except ImportError:
     pass
 
-def projectIntoAffineCam(X, K, R, t, S, skel, varargin):
+def projectIntoAffineCam(X, K, R, t, S, skel):
 
     # Local Variables: strs, J, handle, i, indices, taff, I, numPts, K, Raff, M, s, skel, S, xy, t, varargin, X, R, viz, connect
     # Function calls: isempty, axis, set, figure, plot, projectIntoAffineCam, int2str, line, length, ones, zeros, process_options, ind2sub, skelConnectionMatrix, repmat, text, find, size
     #%xy=projectIntoAffineCam(X, K,R,t,S,skel )
-    [viz, s] = process_options(varargin, 'viz', 0., 'scale', 1.)
+    viz=0
+    s=1
     #%% Do projection
-    numPts = matcompat.size(X, 1.)
+    numPts=X.shape[0]
     #%Create Affine camera
-    Raff = np.array(np.vstack((np.hstack((R[0,:])), np.hstack((R[1,:])), np.hstack((np.zeros(1., 3.))))))
-    taff = np.dot(K, np.array(np.vstack((np.hstack((t[0])), np.hstack((t[1])), np.hstack((1.))))))
+    Raff=np.vstack((R[0,:],R[1,:],np.zeros((1,3))))
+    
+    taff=np.dot(K,np.array((t[0],t[1],1)))
     #% TODO: z-dim should be scaling
     M = np.dot(K, Raff)
     #%Project into affine camera
-    xy = np.dot(np.dot(S, M[0:2.,:]), X.conj().T)+matcompat.repmat(taff[0:2.], np.array(np.hstack((1., numPts))))
-    xy[2,:] = np.ones(1., matcompat.size(xy, 2.))
+    xy = np.dot(np.dot(S, M[0:2,:]), X.conj().T)+np.tile(taff[0:2], np.array((numPts,1))).conj().T
+    xy=np.vstack((xy,np.ones((1, xy.shape[1]))))
     #%% Plot projection
     if viz:
         connect = skelConnectionMatrix(skel)
@@ -63,4 +65,4 @@ def projectIntoAffineCam(X, K, R, t, S, skel, varargin):
         
     
     
-    return [xy]
+    return xy
